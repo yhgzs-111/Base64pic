@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" /> 
+  <title>Base64编码图片解析工具</title>
+  <style type="text/css">
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f2f2f2;
+      text-align: center;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+    }
+
+    h1 {
+      color: #007bff;
+      font-size: 28px;
+      margin-bottom: 20px;
+    }
+
+    p {
+      font-size: 18px;
+      margin-bottom: 20px;
+    }
+
+    button {
+      padding: 12px 24px;
+      font-size: 18px;
+      background-color: #007bff;
+      color: #fff;
+      border: none;
+      cursor: pointer;
+      border-radius: 5px;
+      margin-top: 20px;
+      transition: background-color 0.3s ease;
+    }
+
+    button:hover {
+      background-color: #0056b3;
+    }
+
+    #message {
+      font-size: 18px;
+      margin-top: 10px;
+      color: green;
+    }
+
+    textarea {
+      width: 80%;
+      height: 200px;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      font-size: 16px;
+      resize: none;
+      margin-top: 10px;
+    }
+
+    select {
+      font-size: 16px;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      margin-top: 10px;
+    }
+  </style>
+  <script type="text/javascript">
+    var selectedImageType = "png"; // 默认图片格式为PNG
+
+    function ParseBase64() {  
+      var base64Input = document.getElementById("base64Input").value;
+      var imageType = selectedImageType; // 使用用户选择的图片格式
+
+      if (base64Input) {
+        var pattern = /^[0-9a-zA-Z\u4e00-\u9fa5!"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~\s]*$/;
+        
+        if (pattern.test(base64Input)) {
+          // 显示错误消息（红色）
+          showMessage("解析失败：请勿输入纯数字、纯字母、汉字或特殊字符。", "red");
+        } else {
+          try {
+            // 检查是否以特定前缀开头，并提取前缀中的图片格式
+            var prefixPattern = /^data:image\/(\w+);base64,/;
+            var match = base64Input.match(prefixPattern);
+
+            if (match) {
+              var detectedImageType = match[1];
+              imageType = detectedImageType;
+              // 从Base64编码中去除前缀
+              base64Input = base64Input.replace(prefixPattern, "");
+            }
+
+            // 解析图片
+            var raw = window.atob(base64Input);
+            var rawLength = raw.length;
+            var uInt8Array = new Uint8Array(rawLength);
+            for (var i = 0; i < rawLength; ++i) {
+              uInt8Array[i] = raw.charCodeAt(i);
+            }
+            var blob = new Blob([uInt8Array], { type: 'image/' + imageType }); 
+
+            // 创建一个下载链接
+            var aLink = document.createElement('a');
+            aLink.href = URL.createObjectURL(blob);
+            aLink.download = "parsed_image." + imageType;
+
+            // 模拟点击下载链接
+            aLink.click();
+
+            // 显示成功消息（绿色）
+            showMessage("解析成功！", "green");
+          } catch (error) {
+            // 显示错误消息（红色）
+            showMessage("解析错误：请输入有效的Base64编码。", "red");
+          }
+        }
+      } else {
+        // 显示错误消息（红色）
+        showMessage("请输入Base64编码。", "red");
+      }
+    }
+
+    function showMessage(message, color) {
+      var messageDiv = document.getElementById("message");
+      messageDiv.innerHTML = message;
+      messageDiv.style.color = color;
+
+      // 自动清除消息
+      setTimeout(function() {
+        messageDiv.innerHTML = "";
+      }, 4000);
+    }
+
+    function updateImageType() {
+      selectedImageType = document.getElementById("imageTypeSelect").value;
+    }
+  </script>
+</head>
+<body>      
+  <h1>Base64编码图片解析工具</h1>
+  <p>将Base64编码粘贴到下面的文本框，然后点击按钮解析并保存图片。</p>
+  <textarea id="base64Input" placeholder="粘贴Base64编码"></textarea>
+  <br>
+  <button onclick="ParseBase64()">解析并下载图片</button>
+  <div id="message"></div>
+</body>
+</html>
